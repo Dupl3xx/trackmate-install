@@ -402,7 +402,7 @@
       <div class="qr-label">Naskenujte QR kódem na iPhone / iPad</div>
 
       <div class="qr-container">
-        <div id="qrcode"></div>
+        <img id="qrcode-img" width="200" height="200" alt="QR kód pro instalaci" style="display:block;border-radius:4px;" />
       </div>
 
       <div class="install-url" id="install-url-display">načítání…</div>
@@ -495,31 +495,20 @@
 
   </div>
 
-  <!-- QR Code library (pure JS, no CDN needed for offline use) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   <script>
     // ── Config ──────────────────────────────────────────────
-    // Replace with actual itms-services URL once IPA is hosted
-    const IPA_URL = 'https://dupl3xx.github.io/trackmate-install/TrackMate.ipa';
     const MANIFEST_URL = 'https://dupl3xx.github.io/trackmate-install/manifest.plist';
     const INSTALL_URL = 'itms-services://?action=download-manifest&url=' + encodeURIComponent(MANIFEST_URL);
-    const PAGE_URL = window.location.href.split('?')[0];
+    const PAGE_URL = 'https://dupl3xx.github.io/trackmate-install/';
 
     // ── Detect iOS ──────────────────────────────────────────
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isMac = /Macintosh/.test(navigator.userAgent);
 
-    // ── QR Code ────────────────────────────────────────────
-    QRCode.toCanvas(
-      document.createElement('canvas'), // temp
-      PAGE_URL,
-      { width: 200, margin: 0, color: { dark: '#111', light: '#fff' } },
-      function(err, canvas) {
-        if (!err) {
-          document.getElementById('qrcode').appendChild(canvas);
-        }
-      }
-    );
+    // ── QR Code via Google Charts (no library needed) ──────
+    const qrImg = document.getElementById('qrcode-img');
+    qrImg.src = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl='
+                + encodeURIComponent(PAGE_URL)
+                + '&chco=111111&chf=bg,s,ffffff';
 
     document.getElementById('install-url-display').textContent = PAGE_URL;
 
