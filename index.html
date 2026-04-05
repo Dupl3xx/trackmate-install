@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>TrackMate — Sledování zásilek</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #14141c;
+      --surface2: #1c1c28;
+      --accent: #FF6B35;
+      --accent2: #FF9F1C;
+      --blue: #4A90E2;
+      --green: #30D158;
+      --text: #f0f0f5;
+      --text2: #8e8ea0;
+      --border: rgba(255,255,255,0.07);
+      --radius: 20px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(255,107,53,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* ── App icon ── */
+    .app-icon-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .app-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 24px 60px rgba(255,107,53,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-icon::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: rgba(255,255,255,0.15);
+      border-radius: 22px 22px 0 0;
+    }
+
+    .app-icon svg {
+      width: 52px;
+      height: 52px;
+      fill: white;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Hero text ── */
+    .hero-title {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .hero-sub {
+      text-align: center;
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 44px;
+      max-width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── QR + install CTA ── */
+    .install-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      text-align: center;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .install-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,107,53,0.5), transparent);
+    }
+
+    .qr-label {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .qr-container {
+      display: inline-block;
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    #qrcode {
+      display: block;
+    }
+
+    .install-url {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 20px;
+      word-break: break-all;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .install-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: white;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      box-shadow: 0 12px 40px rgba(255,107,53,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 50px rgba(255,107,53,0.5);
+    }
+
+    .install-btn:active {
+      transform: translateY(0);
+    }
+
+    .install-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+    }
+
+    /* ── How to install ── */
+    .steps-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+      color: white;
+    }
+
+    .step-text {
+      padding-top: 5px;
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .step-text strong {
+      color: white;
+    }
+
+    /* ── Features ── */
+    .features-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 44px;
+    }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 16px;
+    }
+
+    .feature-icon {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .feature-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.4;
+    }
+
+    /* ── Carriers ── */
+    .carriers-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .carriers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 44px;
+    }
+
+    .carrier-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .carrier-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+      padding: 0 4px;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ── Alert banner ── */
+    .alert {
+      background: rgba(255,107,53,0.12);
+      border: 1px solid rgba(255,107,53,0.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #ffb89a;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+
+    /* ── Not iOS notice ── */
+    .not-ios-notice {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-size: 14px;
+      color: var(--text2);
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .not-ios-notice.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- App Icon -->
+    <div class="app-icon-wrap">
+      <div class="app-icon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Package box -->
+          <rect x="18" y="42" width="64" height="44" rx="5" fill="white" opacity="0.9"/>
+          <!-- Box top -->
+          <polygon points="18,42 50,24 82,42" fill="white"/>
+          <!-- Tape stripe -->
+          <rect x="44" y="42" width="12" height="44" fill="rgba(255,150,80,0.5)"/>
+          <polygon points="44,42 50,24 56,24 50,31" fill="rgba(255,150,80,0.5)"/>
+          <!-- Location pin -->
+          <circle cx="68" cy="30" r="11" fill="white"/>
+          <path d="M68 22 C63.5 22 60 25.5 60 30 C60 35.5 68 44 68 44 C68 44 76 35.5 76 30 C76 25.5 72.5 22 68 22Z" fill="rgba(255,107,53,0.9)"/>
+          <circle cx="68" cy="30" r="3.5" fill="white"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <h1 class="hero-title">TrackMate</h1>
+    <p class="hero-sub">Sledujte zásilky od DHL, Zásilkovny, DPD, PPL, České pošty a Geisu — vše offline, bez účtu.</p>
+
+    <!-- Install Card -->
+    <div class="install-card">
+      <div class="qr-label">Naskenujte QR kódem na iPhone / iPad</div>
+
+      <div class="qr-container">
+        <div id="qrcode"></div>
+      </div>
+
+      <div class="install-url" id="install-url-display">načítání…</div>
+
+      <div class="alert" id="trust-alert">
+        ⚠️ Po instalaci přejděte do <strong>Nastavení → Obecné → VPN a správa zařízení</strong> a důvěřujte certifikátu vývojáře, aby se aplikace spustila.
+      </div>
+
+      <div class="not-ios-notice" id="not-ios-notice">
+        📱 Otevřete tuto stránku na <strong>iPhone nebo iPad</strong> a nainstalujte aplikaci.
+      </div>
+
+      <a class="install-btn" id="install-btn" href="#" onclick="return handleInstall(event)">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        Instalovat TrackMate
+      </a>
+    </div>
+
+    <!-- How to install -->
+    <div class="steps-title">Jak nainstalovat</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Otevřete tuto stránku na <strong>iPhone nebo iPad</strong> — kamera nebo Safari.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Klepněte na tlačítko <strong>Instalovat TrackMate</strong> výše.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Přejděte do <strong>Nastavení → Obecné → VPN a správa zařízení</strong> a klepněte na <strong>Důvěřovat</strong>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Spusťte <strong>TrackMate</strong> z plochy a začněte sledovat zásilky.</div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features-title">Co umí</div>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">📦</div>
+        <div class="feature-name">6 dopravců</div>
+        <div class="feature-desc">DHL, Zásilkovna, DPD, PPL, Česká pošta, Geis</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📷</div>
+        <div class="feature-name">Skenování</div>
+        <div class="feature-desc">Čárový kód nebo foto s OCR rozpoznáváním</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔔</div>
+        <div class="feature-name">Notifikace</div>
+        <div class="feature-desc">Upozornění při změně stavu zásilky</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-name">5 jazyků</div>
+        <div class="feature-desc">CS, EN, SK, DE, PL bez nutnosti internetu</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-name">Soukromí</div>
+        <div class="feature-desc">Žádný účet, žádná data na serveru</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📱</div>
+        <div class="feature-name">iPhone + iPad</div>
+        <div class="feature-desc">Nativní SwiftUI, optimalizováno pro oba</div>
+      </div>
+    </div>
+
+    <!-- Carriers -->
+    <div class="carriers-title">Podporovaní dopravci</div>
+    <div class="carriers">
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#FFD700"></div>DHL</div>
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#FF4D1A"></div>Zásilkovna</div>
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#D91A1A"></div>DPD</div>
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#0072CC"></div>PPL</div>
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#FF9900"></div>Česká pošta</div>
+      <div class="carrier-badge"><div class="carrier-dot" style="background:#007A33"></div>Geis</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      TrackMate — development build &middot; iOS 17+ &middot; <a href="https://github.com/Dupl3xx/trackmate-ios" target="_blank">GitHub</a>
+    </div>
+
+  </div>
+
+  <!-- QR Code library (pure JS, no CDN needed for offline use) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script>
+    // ── Config ──────────────────────────────────────────────
+    // Replace with actual itms-services URL once IPA is hosted
+    const IPA_URL = 'https://dupl3xx.github.io/trackmate-ios/TrackMate.ipa';
+    const MANIFEST_URL = 'https://dupl3xx.github.io/trackmate-ios/manifest.plist';
+    const INSTALL_URL = 'itms-services://?action=download-manifest&url=' + encodeURIComponent(MANIFEST_URL);
+    const PAGE_URL = window.location.href.split('?')[0];
+
+    // ── Detect iOS ──────────────────────────────────────────
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isMac = /Macintosh/.test(navigator.userAgent);
+
+    // ── QR Code ────────────────────────────────────────────
+    QRCode.toCanvas(
+      document.createElement('canvas'), // temp
+      PAGE_URL,
+      { width: 200, margin: 0, color: { dark: '#111', light: '#fff' } },
+      function(err, canvas) {
+        if (!err) {
+          document.getElementById('qrcode').appendChild(canvas);
+        }
+      }
+    );
+
+    document.getElementById('install-url-display').textContent = PAGE_URL;
+
+    // ── Install button behaviour ────────────────────────────
+    const btn = document.getElementById('install-btn');
+    const trustAlert = document.getElementById('trust-alert');
+    const notIOS = document.getElementById('not-ios-notice');
+
+    if (isIOS) {
+      btn.href = INSTALL_URL;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Instalovat TrackMate';
+    } else {
+      notIOS.classList.add('show');
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'default';
+    }
+
+    function handleInstall(e) {
+      if (!isIOS) {
+        e.preventDefault();
+        notIOS.classList.add('show');
+        return false;
+      }
+      trustAlert.classList.add('show');
+      return true;
+    }
+  </script>
+</body>
+</html>
